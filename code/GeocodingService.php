@@ -21,7 +21,7 @@ class GeocodingService implements IGeocodingService
      */
     protected function markLimit()
     {
-        $this->getCache()->save(time(), 'dailyLimit', array(), null);
+        $this->getCache()->save(time(), 'dailyLimit', array());
     }
 
     public function isOverLimit()
