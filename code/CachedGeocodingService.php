@@ -18,7 +18,7 @@ class CachedGeocodingService implements IGeocodingService
     
     /**
      * Gets the cache object
-     * 
+     *
      * @return Zend_Cache_Frontend
      */
     protected function getCache()
@@ -28,7 +28,6 @@ class CachedGeocodingService implements IGeocodingService
     
     public function geocode($address)
     {
-        
         // Generate unique key for address
         $address = $this->normaliseAddress($address);
         $addressKey = md5('CachedGeocodingService_' . $address);

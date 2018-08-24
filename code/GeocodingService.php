@@ -64,7 +64,6 @@ class GeocodingService implements IGeocodingService
      */
     public function geocode($address)
     {
-
         // Don't attempt geocoding if over limit
         if ($this->isOverLimit()) {
             return array(
@@ -77,11 +76,18 @@ class GeocodingService implements IGeocodingService
 
         // Geocode
         $address = $this->normaliseAddress($address);
-        $requestURL = "http://maps.googleapis.com/maps/api/geocode/xml?sensor=false&address=" . urlencode($address);
-        $xml = simplexml_load_file($requestURL);
+        $requestURL = 'https://maps.googleapis.com/maps/api/geocode/json?sensor=false&address=' . urlencode($address) .
+            '&key=' . SiteConfig::config()->google_maps_geocode_api_key;
+        
+        $curlRequest = curl_init($requestURL);
+        curl_setopt($curlRequest, CURLOPT_RETURNTRANSFER, 1);
+        $curlResponseString = curl_exec($curlRequest);
+        curl_close($curlRequest);
+
+        $json = json_decode($curlResponseString);
 
         // Check if there is a result
-        if (empty($xml)) {
+        if (empty($json)) {
             return array(
                 'Success' => false,
                 'Error' => 'UNKNOWN_ERROR',
@@ -91,7 +97,7 @@ class GeocodingService implements IGeocodingService
         }
 
         // Check if result has specified error
-        $status = (string)$xml->status;
+        $status = (string)$json->status;
         if (strcmp($status, "OK") != 0) {
             // check if limit hasbeen breached
             $cache = true;  // failed results should still be cacheable
@@ -107,23 +113,24 @@ class GeocodingService implements IGeocodingService
             );
         }
 
-        $coordinates = $xml->result->geometry->location;
+        $result = $json->results[0];
+        $coordinates = $result->geometry->location;
 
         return array(
             'Success' => true,
             'Latitude' => floatval($coordinates->lat),
             'Longitude' => floatval($coordinates->lng),
-            'StreetNumber' => '' . $xml->result->address_component[0]->long_name,
-            'StreetName' => '' . $xml->result->address_component[1]->long_name,
-            'StreetNameShort' => '' . $xml->result->address_component[1]->short_name,
-            'Suburb' => '' . $xml->result->address_component[2]->long_name,
-            'Council' => '' . $xml->result->address_component[3]->long_name,
-            'CouncilShort' => '' . $xml->result->address_component[3]->short_name,
-            'State' => '' . $xml->result->address_component[4]->long_name,
-            'StateShort' => '' . $xml->result->address_component[4]->short_name,
-            'Country' => '' . $xml->result->address_component[5]->long_name,
-            'CountryShort' => '' . $xml->result->address_component[5]->short_name,
-            'PostCode' => '' . $xml->result->address_component[6]->long_name,
+            'StreetNumber' => '' . $result->address_component[0]->long_name,
+            'StreetName' => '' . $result->address_components[1]->long_name,
+            'StreetNameShort' => '' . $result->address_components[1]->short_name,
+            'Suburb' => '' . $result->address_components[2]->long_name,
+            'Council' => '' . $result->address_components[3]->long_name,
+            'CouncilShort' => '' . $result->address_components[3]->short_name,
+            'State' => '' . $result->address_components[4]->long_name,
+            'StateShort' => '' . $result->address_components[4]->short_name,
+            'Country' => '' . $result->address_components[5]->long_name,
+            'CountryShort' => '' . $result->address_components[5]->short_name,
+            'PostCode' => '' . $result->address_components[6]->long_name,
             'Cache' => true
         );
     }
