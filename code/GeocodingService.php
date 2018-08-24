@@ -120,7 +120,7 @@ class GeocodingService implements IGeocodingService
             'Success' => true,
             'Latitude' => floatval($coordinates->lat),
             'Longitude' => floatval($coordinates->lng),
-            'StreetNumber' => '' . $result->address_component[0]->long_name,
+            'StreetNumber' => '' . $result->address_components[0]->long_name,
             'StreetName' => '' . $result->address_components[1]->long_name,
             'StreetNameShort' => '' . $result->address_components[1]->short_name,
             'Suburb' => '' . $result->address_components[2]->long_name,
